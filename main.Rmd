@@ -1,0 +1,259 @@
+---
+title: "Final Draft"
+author: "Harshit Bagla"
+date: "12/19/2020"
+output: 
+  html_document:
+    toc: yes
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+**************
+
+I am predicting the exchange rate between INR (Indian Rupees) and USD (US dollars). For over a few years, economists have been trying to predict exchange rates between different currencies. However, there hasn't been a model accurate enough which would satisfy them. The finest model that they have a present uses Random Walk. Since exchange rates are such crucial component of an economy, economists will be interested in my model. Exchange rates not only affect the macroeconomic aspect of the economy such as import and export, GDP, BOP, interest rates, etc, but also the microeconomic components of an economy. Since, I have takes data at a daily frequency, I have managed to reduce the error significantly. Personally, knowing how much the dollars will appreciate will help me plan the future expenses for the next few years of my education.
+
+# Data Wrangling and Cleaning
+*****************************
+
+## Datasets and source
+**********************
+
+I downloaded the data for the exchange rate between India and the US from investing.com. I got the data for stock market indexes from yahoo finance. I downloaded the effective federal funds rate, prices of gold, prices of crude oil, prices if Indian government bond yields, moody daaa, and treasure bills from Fred.
+
+## Data Wrangling and Cleaning
+******************************
+
+### Crude Oil
+*************
+
+I had 3 csv files for this data because the site was not letting me download such a big dataset at once. I started by reading all the csv files and initializing them to 3 different variables. Then I turned their names to lowercase. After turning them to lowercase, I combined all 3 data tables into one by using rbind function. Since the dates on the table were unordered, I ordered them by date and then converted the prices to a numeric type from a string type.
+
+### Effective Federal Funds Rate
+********************************
+
+For this dataset, I converted the names to lowercase and then converted the values from a string type to a numeric type. Then I ordered the dataset by date.
+
+### Gold
+********
+
+I went through the same process I did for Effective Federal: converting names to lowercase, changing type to numeric, and ordering data by dates.
+
+### Indian Government Bond Yields
+*********************************
+
+Same steps as for Gold with an addition of choosing the date and Indian Government Bond Yields fields.
+
+### Indian Index
+****************
+
+I went through the same steps as I did for Indian Government Bond Yields. I chose dates and the opening value on each day.
+
+### Moody DAAA
+**************
+
+I went through the same process I did for Effective Federal: converting names to lowercase, changing type to numeric, and ordering data by dates.
+
+### Treasury Bills
+******************
+
+I went through the same process I did for Effective Federal: converting names to lowercase, changing type to numeric, and ordering data by dates.
+
+### US Index
+************
+
+I went through the same process I did for Effective Federal: converting names to lowercase, changing type to numeric, and ordering data by dates.
+
+### Exchange Rates
+******************
+
+Same steps. However, I had data which represented INR per USD. I converted that to a value that would represent USD per INR to have the same unit everywhere.
+
+### Final Dataset
+*****************
+
+At last, I concatenated all the table into a single table and then I accounted for the inflation. I took the base year to be 2020 and I converted each year's value so that they have the same purchasing power as that amount would in 2020. I converted the prices of US Index, Indian Index, Gold Prices, and Crude Oil Prices.
+
+## Code Snippet
+***************
+
+```{r, eval=FALSE}
+set.seed(490)
+
+train = sample_frac(data, size = 0.80)
+test  = anti_join(data, train, by = 'date')
+```
+
+
+# EDA
+*****
+
+```{r, include=FALSE}
+library(data.table)
+library(tidyverse)
+library(ggplot2)
+
+path = '/Users/harshit/Desktop/UIUC/Fall 2020/Econ 490/Final Project'
+
+data = fread(paste0(path, '/data.csv'))
+```
+
+## Plot 1
+*********
+
+```{r}
+ggplot(data, aes(x=date, y=usdperinr)) + geom_point() + theme(text = element_text(size = 16)) + ggtitle("Exchange Rate vs Date")
+```
+
+I wanted to plot exchange rate against date because I wanted to see if there is a trend that is repeated in every year. However, when I saw the scatterplot, I realized that there is no specific trend that is being repeated every year. From this graph, I realized that exchange rates are less predictable and linear than I anticipated.
+
+## Plot 2
+*********
+
+```{r}
+ggplot(data, aes(x=crudeoilusdperbarrel, y=usdperinr)) + geom_point() + theme(text = element_text(size = 16)) + ggtitle("Exchange Rate vs Crude Oil Prices")
+```
+
+The biggest value in trades is generated by imports and exports of oil between US and India. I wanted to know if there is a relation between the prices of crude oil and the exchange rate. From the figure, I can't say that there is a discrete of linear relation but there is a slight position correlation between them. As the price of the oil is increasing, the exchange rate is increasing in general.
+
+## Plot 3
+*********
+```{r}
+ggplot(data, aes(x=lagexchangerate, y=usdperinr)) + geom_point() + theme(text = element_text(size = 16)) + ggtitle("Exchange Rate vs Lag Exchange Rate")
+```
+
+Before collecting all the data, I did an extensive research on this topic. I realized that most economists mentioned that exchange rates are highly depends on the exchange rate from the previous day. Hence, I wanted to see if there is a linear relation between them. As you can see in the figure above. There is a very strong linear relation between them. The relation makes sense because countries wouldn’t want their currency to have a volatile nature. Also, the only way there can be a huge change in such short term would be because of mass destruction such as war, natural calamity, etc.
+
+## Plot 4
+*********
+
+```{r}
+ggplot(data, aes(x=usdperinr)) + geom_histogram() + theme(text = element_text(size = 16)) + ggtitle("Final Histogram")
+```
+
+According to the figure above and plot 1, I can safely assume that the exchange rate is bouncing between a band.In both the graphs, the values are adjusted so that they have the base year 2020. The value of exchange rate (USD per INR) is highly influenced by the inflation rate in both the countries.
+
+# Inference
+***********
+
+## Cross-Validation
+*******************
+
+```{r figure1, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p1.png")
+```
+```{r figure2, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p2.png")
+```
+
+## Best Lambda
+**************
+
+Code is in the screenshot above
+```{r figure3, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p3.png")
+```
+
+## Final Model Code and Output
+******************************
+
+```{r figure4, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p4.png")
+```
+```{r figure5, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p5.png")
+```
+
+## Interpretation
+*****************
+My favorite 3 variables are lagexchangerate, crudeoilusdperbarrel, and usindex.
+
+Lag Exchange Rate has the largest coefficient. This shows that the exchange rates are highly depends on the exchange rate from the previous day. Hence, I wanted to see if there is a linear relation between them. As you can see in the figure above. There is a very strong linear relation between them. The relation makes sense because countries wouldn’t want their currency to have a volatile nature. Also, the only way there can be a huge change in such short term would be because of mass destruction such as war, natural calamity, etc.
+
+From the figure and the summary, the price of crude oil also has a positive correlation with the exchange rate. This is understandable because the trade of oil between the 2 countries has the highest monetary value.
+
+After looking at the coefficient for the US index, I was surprised that it has a slight negative impact on the exchange rate.
+
+# Prediction
+************
+
+## Inference model accuracy
+***************************
+
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p6.png")
+```
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p7.png")
+```
+
+## Chosen model 1 training
+**************************
+
+I have chosen Boosted Random Forest as my first model.
+
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p8.png")
+```
+
+## Chosen model 1 test accuracy
+*******************************
+
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p9.png")
+```
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p10.png")
+```
+
+## Chosen model 2 training
+**************************
+
+I have chosen neural network as my second model.
+
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p11.png")
+```
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p12.png")
+```
+
+## Chosen model 2 test accuracy
+*******************************
+
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p13.png")
+```
+```{r, echo=FALSE, out.width = '90%'}
+knitr::include_graphics("p14.png")
+```
+
+## Descriptions/discussions
+***************************
+
+I was happy with the inference model and the boosting random forest model in terms of the error. They have a very low error as compared to my neural network model. However, it is not the only criterion to judge a model. While playing around with these models. I noticed that both of my models were more flexible than the inference model. The OLS inference model doesn’t account for some variables which I think are an important factor in predicting the exchange rate between two countries. I was really impressed by the boosting random forest model because it managed to give me the least MSE with all the variable I think are important to consider when calculating the exchange rate. I also believe that both of my models can do better if I include more factors affecting exchange rates between India and United States.
+
+# Comparison
+************
+
+All of the models, that I have used, have given me a really low MSE value. This is also because the actual prediction values a really small in magnitude. The prediction value is the exchange rate between INR and USD. For simplicity, all the values are in USD. According to the MSE value, the boosting random forest outperforms both the other models. However, I think Neural Network is more flexible. The dollar has only been appreciated with respect to rupees. However, if in future, the dollars depreciate, I think Neural Network will be better at predicting the exchange rates because it is more flexible. My best model is model 1, Boosting Random Forest.
+
+# Conclusion
+************
+
+In this project, I am predicting the exchange rate between INR and USD. To do so, I used data which I think has a big impact on the exchange rate and is also available at a high frequency such as daily. These variables are price of crude oil, effective federal funds rate, price of gold, Indian government bond yields, Indian index, Moody DAAA, Treasury Bills, US index, and Exchange rates. After regularization, the top three predictors I got are lag exchange rates, effective federal funds rate, and Moody DAAA. However, my favorite predictors are lag exchange rates, price of crude oil, and US index. I used 3 models to predict the exchange rate. The given model was Lasso with an MSE of 2.88x10^-8. The first chosen model was Boosted Random Forest with an MSE of 1.72x10^-8. And the second chosen model was Neural Network with an MSE of 3.32x10^-4. The neural network had 1 input layer(ReLU), 2 internal layers(ReLU), and 1 output layer(softplus), with 100, 200, 150, and 1 nodes respectively. Out of these 3 models, the model 1, Boosted Random Forest, was the best model. In the future, I would like to collect more macroeconomic data such as GDP, import and export, etc and meta data so that I can divide them into smaller frequency. This way I would be able to add them in my model.
+
+
+
+
+
+
+
+
+
+
+
